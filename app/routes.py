@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from .models import save_user, get_all_users, get_user_by_id, update_user, delete_user
 from bson.objectid import ObjectId
+from flask_caching import Cache
+cache = Cache()
 
 user = Blueprint('user', __name__)
 
@@ -8,9 +10,11 @@ user = Blueprint('user', __name__)
 def create():
     data = request.get_json()
     user_id = save_user(data)
+    cache.clear()
     return jsonify({"id": str(user_id.inserted_id)}), 201
 
 @user.route('/users', methods=['GET'])
+@cache.cached(timeout=30)
 def get_users():
     users = get_all_users()
     return jsonify(users), 200
